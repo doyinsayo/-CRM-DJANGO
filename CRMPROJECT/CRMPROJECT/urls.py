@@ -15,9 +15,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path,include
-from leads import views
+import leads.urls
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('',include('leads.urls'))
+    path('leads/',include('leads.urls',namespace='leads')),
 ]
