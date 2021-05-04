@@ -5,6 +5,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView,ListView,DetailView,CreateView,UpdateView,DeleteView
 from .models import Lead,Agent
 from .forms import LeadModelForm,CustomUserCreationForm
+from agents.mixins import OrganisorAndLoginRequiredMixin
 
 
 # Create your views here.
@@ -26,8 +27,13 @@ class LeadDetailview(LoginRequiredMixin ,DetailView):
 
 class LeadListView(LoginRequiredMixin ,ListView):
     template_name = 'leads/lead_list.html'
-    queryset = Lead.objects.all()    
     context_object_name = 'leads'
+
+    def get_queryset(self):
+        queryset = Lead.objects.all()
+        if self.request.user.is_agent:
+            queryset = queryset.filter(agent__user=self.request.user)
+        return queryset    
 
 class LeadCreateView(LoginRequiredMixin ,CreateView):
     template_name = 'leads/lead_create.html'
@@ -45,7 +51,7 @@ class LeadCreateView(LoginRequiredMixin ,CreateView):
         )    
         return super(LeadCreateView,self).form_valid(form)
 
-class LeadUpdateView(LoginRequiredMixin,UpdateView):
+class LeadUpdateView(OrganisorAndLoginRequiredMixin,UpdateView):
     template_name = 'leads/lead_update.html'
     form_class = LeadModelForm
     queryset = Lead.objects.all()
@@ -53,7 +59,7 @@ class LeadUpdateView(LoginRequiredMixin,UpdateView):
     def get_success_url(self):
         return reverse('leads:lead_list')
 
-class LeadDeleteView(LoginRequiredMixin,DeleteView):
+class LeadDeleteView(OrganisorAndLoginRequiredMixin,DeleteView):
     template_name = 'leads/lead_delete.html'
     queryset = Lead.objects.all()
 
