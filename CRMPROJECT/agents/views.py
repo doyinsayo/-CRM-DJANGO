@@ -10,7 +10,7 @@ class AgentListView(OrganisorAndLoginRequiredMixin,generic.ListView):
     template_name = 'agents/agent_list.html'
 
     def get_queryset(self):
-        request_user_organisation = self.request.user.userprofile
+        organisation = self.request.user.userprofile
         return Agent.objects.filter(organisation=organisation)
 
 class AgentCreateView(OrganisorAndLoginRequiredMixin,generic.CreateView):
@@ -21,9 +21,23 @@ class AgentCreateView(OrganisorAndLoginRequiredMixin,generic.CreateView):
         return reverse('agents:agent-list')     
 
     def form_valid(self, form):
-        agent = form.save(commit= False)
-        agent.organisation = self.request.user.userprofile
-        agent.save()
+        user = form.save(commit= False)
+        user.is_agent = True
+        user.is_organisor = False
+        user.set_password(random)
+        user.save(f'{random.randint(0, 100000)}')
+        Agent.objects.create(
+            user=user,
+            organisation=self.request.user.uerprofile
+        )
+        send_mail(
+            subject = 'You are invited to be an agent',
+            message = 'You were added as an agent on Django CRM,please login to begin work',
+            from_email = 'admin@test.com',
+            recipient_list =  [user.email]
+        )
+        #agent.organisation = self.request.user.userprofile
+        #agent.save()
         return super(AgentCreateView,self).form_valid(form)       
 
 class AgentDetailView(OrganisorAndLoginRequiredMixin,generic.DetailView):
